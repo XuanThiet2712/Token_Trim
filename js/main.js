@@ -56,7 +56,7 @@ Thanks in advance!`;
     state.tab = tab;
     $$(".tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
     ["trim", "en", "json", "view", "guide"].forEach(t => { $("#panel-" + t).hidden = t !== tab; });
-    $("#io").hidden = tab === "guide"; $("#outWrap").hidden = tab === "view";
+    $("#io").hidden = tab === "guide"; $("#outWrap").hidden = tab === "view"; $("#heatWrap").hidden = tab !== "view";
     update();
   }
   async function copy(text, btn, label) {

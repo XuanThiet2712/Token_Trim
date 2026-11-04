@@ -8,42 +8,21 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<main class="wrap">
-  <header class="top">
-    <div><h1>TokenTrim</h1><p class="muted">Đếm, nén và cắt token trước khi gửi cho AI. Chạy trong trình duyệt của bạn.</p></div>
+<div class="app">
+<aside class="side">
+  <div class="brand">
+    <div><h1>TokenTrim</h1><p class="muted small">Nén token trước khi gửi cho AI</p></div>
     <button id="btnTheme" class="ghost" aria-label="Đổi giao diện sáng/tối">Chế độ tối</button>
-  </header>
-
-  <section class="hero" aria-live="polite">
-    <div class="hero-main">
-      <div class="pct"><span id="nPct">0%</span><small>token được giảm</small></div>
-      <div class="flow"><b id="nBefore">0</b><span>→</span><b id="nAfter">0</b><small>token</small></div>
-    </div>
-    <div class="bar"><i id="barFill"></i></div>
-    <div class="cards">
-      <div><span class="k">Chiếm cửa sổ ngữ cảnh</span><b id="nCtx">0%</b></div>
-      <div><span class="k">Chi phí đầu vào / lượt</span><b id="nCost">0</b></div>
-      <div><span class="k">Tiết kiệm / 1.000 lượt</span><b id="nSave">0</b></div>
-    </div>
-    <div class="settings">
-      <label>Cửa sổ ngữ cảnh
-        <select id="ctx"><option value="8000">8K</option><option value="32000">32K</option><option value="128000" selected>128K</option><option value="200000">200K</option><option value="1000000">1M</option></select>
-      </label>
-      <label>Giá đầu vào (USD / 1 triệu token)
-        <input id="price" type="number" min="0" step="0.1" value="3">
-      </label>
-    </div>
-  </section>
-
-  <nav class="tabs" role="tablist" aria-label="Chọn cách tối ưu">
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Chọn công cụ">
     <button role="tab" data-tab="trim" aria-selected="true">Nén prompt</button>
     <button role="tab" data-tab="en" aria-selected="false">Dịch Việt → Anh</button>
     <button role="tab" data-tab="json" aria-selected="false">JSON → bảng</button>
     <button role="tab" data-tab="view" aria-selected="false">Soi token</button>
     <button role="tab" data-tab="guide" aria-selected="false">Hướng dẫn</button>
   </nav>
-
-  <section id="panel-trim" class="panel">
+  <div class="tools">
+<section id="panel-trim" class="panel">
     <div class="presets"><span class="muted">Mức tối ưu:</span>
       <button data-level="1">An toàn</button><button data-level="2">Cân bằng</button><button data-level="3">Tối đa</button>
     </div>
@@ -52,9 +31,7 @@
       <input id="budget" type="number" min="0" step="50" value="0">
     </label>
     <p class="muted small">Vượt giới hạn thì giữ 70% đầu, 30% cuối và lược phần giữa.</p>
-  </section>
-
-  <section id="panel-en" class="panel" hidden>
+  </section><section id="panel-en" class="panel" hidden>
     <p>Cùng một nội dung, tiếng Anh thường tốn ít token hơn tiếng Việt nhiều. Chọn một trong ba cách:</p>
     <div class="opt"><b>1. Từ điển có sẵn (offline, miễn phí).</b> Bật quy tắc “Đổi cụm Việt thường gặp sang Anh” ở tab Nén prompt, hoặc nhấn nút dưới. Chỉ đổi các cụm chỉ dẫn phổ biến.
       <div class="row"><button id="btnGloss">Áp dụng từ điển</button></div></div>
@@ -67,27 +44,46 @@
         <button id="btnAI" class="primary">Chạy</button>
       </div>
       <p id="aiStatus" class="muted small"></p></div>
-  </section>
-
-  <section id="panel-json" class="panel" hidden>
+  </section><section id="panel-json" class="panel" hidden>
     <p class="muted small">Dán một mảng JSON các object giống nhau. Tên khóa chỉ ghi một lần ở dòng đầu, thường giảm 30–60% token.</p>
-  </section>
-  <section id="panel-view" class="panel" hidden>
+  </section><section id="panel-view" class="panel" hidden>
     <p class="muted small">Từ gạch chân tốn từ 2 token trở lên, càng đậm càng tốn. Rê chuột để xem số token.</p>
-    <div id="heat" class="heat"></div>
+  </section>
+  </div>
+  <div class="settings">
+    <label>Cửa sổ ngữ cảnh
+      <select id="ctx"><option value="8000">8K</option><option value="32000">32K</option><option value="128000" selected>128K</option><option value="200000">200K</option><option value="1000000">1M</option></select>
+    </label>
+    <label>Giá đầu vào (USD / 1 triệu token)
+      <input id="price" type="number" min="0" step="0.1" value="3">
+    </label>
+  </div>
+</aside>
+
+<main class="main">
+  <section class="hero" aria-live="polite">
+    <div class="pct"><span id="nPct">0%</span><small>token giảm</small></div>
+    <div class="flow"><b id="nBefore">0</b><span>→</span><b id="nAfter">0</b><small>token</small></div>
+    <div class="mini"><span class="k">Ngữ cảnh</span><b id="nCtx">0%</b></div>
+    <div class="mini"><span class="k">Chi phí / lượt</span><b id="nCost">0</b></div>
+    <div class="mini"><span class="k">Tiết kiệm / 1.000 lượt</span><b id="nSave">0</b></div>
+    <div class="bar"><i id="barFill"></i></div>
   </section>
 
   <div id="io" class="io">
-    <section>
+    <section class="box">
       <div class="row between"><label for="src" class="h">Văn bản gốc</label><div class="row"><button id="btnSample">Dùng ví dụ</button><button id="btnClear">Xóa</button></div></div>
       <textarea id="src" spellcheck="false" placeholder="Dán prompt, JSON hoặc code vào đây…"></textarea>
     </section>
-    <section id="outWrap">
+    <section id="outWrap" class="box">
       <div class="row between"><label for="out" class="h">Kết quả</label><button id="btnCopy" class="primary">Sao chép</button></div>
       <textarea id="out" readonly></textarea>
     </section>
+    <section id="heatWrap" class="box" hidden>
+      <div class="row between"><span class="h">Token từng từ</span></div>
+      <div id="heat" class="heat"></div>
+    </section>
   </div>
-
   <section id="panel-guide" class="panel guide" hidden>
     <h2>Token là gì</h2>
     <p>Mô hình AI không đọc chữ mà đọc các mẩu nhỏ gọi là token. Một token có thể là một từ ngắn, một phần của từ dài, một dấu câu hoặc một ký tự xuống dòng. Bạn bị tính tiền và bị giới hạn ngữ cảnh theo số token này, cả phần bạn gửi lên (đầu vào) lẫn phần AI trả về (đầu ra).</p>
@@ -116,6 +112,7 @@
     </ul>
   </section>
 </main>
+</div>
 <script src="js/store.js"></script>
 <script src="js/tokenizer.js"></script>
 <script src="js/rules.js"></script>
