@@ -29,4 +29,3 @@ Trong `js/rules.js`, thêm vào mảng `TT.Rules`:
 
 ## Lưu ý
 Số token là ước lượng, lệch khoảng 10–20% so với bộ đếm chính thức của từng mô hình.
-# Token_Trim

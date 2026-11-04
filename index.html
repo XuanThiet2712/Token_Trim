@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TokenTrim</title>
+<script>try{var t=JSON.parse(localStorage.getItem("tt:theme"));if(!t)t=matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light";document.documentElement.dataset.theme=t}catch(e){document.documentElement.dataset.theme="light"}</script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main class="wrap">
+  <header class="top">
+    <div><h1>TokenTrim</h1><p class="muted">Đếm, nén và cắt token trước khi gửi cho AI. Chạy trong trình duyệt của bạn.</p></div>
+    <button id="btnTheme" class="ghost" aria-label="Đổi giao diện sáng/tối">Chế độ tối</button>
+  </header>
+
+  <section class="hero" aria-live="polite">
+    <div class="hero-main">
+      <div class="pct"><span id="nPct">0%</span><small>token được giảm</small></div>
+      <div class="flow"><b id="nBefore">0</b><span>→</span><b id="nAfter">0</b><small>token</small></div>
+    </div>
+    <div class="bar"><i id="barFill"></i></div>
+    <div class="cards">
+      <div><span class="k">Chiếm cửa sổ ngữ cảnh</span><b id="nCtx">0%</b></div>
+      <div><span class="k">Chi phí đầu vào / lượt</span><b id="nCost">0</b></div>
+      <div><span class="k">Tiết kiệm / 1.000 lượt</span><b id="nSave">0</b></div>
+    </div>
+    <div class="settings">
+      <label>Cửa sổ ngữ cảnh
+        <select id="ctx"><option value="8000">8K</option><option value="32000">32K</option><option value="128000" selected>128K</option><option value="200000">200K</option><option value="1000000">1M</option></select>
+      </label>
+      <label>Giá đầu vào (USD / 1 triệu token)
+        <input id="price" type="number" min="0" step="0.1" value="3">
+      </label>
+    </div>
+  </section>
+
+  <nav class="tabs" role="tablist" aria-label="Chọn cách tối ưu">
+    <button role="tab" data-tab="trim" aria-selected="true">Nén prompt</button>
+    <button role="tab" data-tab="en" aria-selected="false">Dịch Việt → Anh</button>
+    <button role="tab" data-tab="json" aria-selected="false">JSON → bảng</button>
+    <button role="tab" data-tab="view" aria-selected="false">Soi token</button>
+    <button role="tab" data-tab="guide" aria-selected="false">Hướng dẫn</button>
+  </nav>
+
+  <section id="panel-trim" class="panel">
+    <div class="presets"><span class="muted">Mức tối ưu:</span>
+      <button data-level="1">An toàn</button><button data-level="2">Cân bằng</button><button data-level="3">Tối đa</button>
+    </div>
+    <div id="rules"></div>
+    <label class="budget">Giới hạn cứng (token, 0 = tắt)
+      <input id="budget" type="number" min="0" step="50" value="0">
+    </label>
+    <p class="muted small">Vượt giới hạn thì giữ 70% đầu, 30% cuối và lược phần giữa.</p>
+  </section>
+
+  <section id="panel-en" class="panel" hidden>
+    <p>Cùng một nội dung, tiếng Anh thường tốn ít token hơn tiếng Việt nhiều. Chọn một trong ba cách:</p>
+    <div class="opt"><b>1. Từ điển có sẵn (offline, miễn phí).</b> Bật quy tắc “Đổi cụm Việt thường gặp sang Anh” ở tab Nén prompt, hoặc nhấn nút dưới. Chỉ đổi các cụm chỉ dẫn phổ biến.
+      <div class="row"><button id="btnGloss">Áp dụng từ điển</button></div></div>
+    <div class="opt"><b>2. Dán vào chat AI bất kỳ (miễn phí).</b> Sao chép lệnh dịch kèm văn bản của bạn, dán vào ChatGPT, Claude, Gemini…, lấy kết quả dùng làm prompt chính.
+      <div class="row"><button id="btnMeta">Sao chép lệnh + văn bản</button></div></div>
+    <div class="opt"><b>3. Gọi AI ngay trong trang (cần API key).</b> Key chỉ giữ trong bộ nhớ trang này và gửi thẳng tới api.anthropic.com, không lưu lại. Lệnh này cũng tốn một ít token, nên đáng dùng khi prompt dài hoặc dùng lại nhiều lần.
+      <div class="row wrapr">
+        <input id="apiKey" type="password" placeholder="sk-ant-…" autocomplete="off" aria-label="API key">
+        <select id="aiMode"><option value="en">Dịch sang Anh + nén</option><option value="same">Chỉ nén, giữ ngôn ngữ</option></select>
+        <button id="btnAI" class="primary">Chạy</button>
+      </div>
+      <p id="aiStatus" class="muted small"></p></div>
+  </section>
+
+  <section id="panel-json" class="panel" hidden>
+    <p class="muted small">Dán một mảng JSON các object giống nhau. Tên khóa chỉ ghi một lần ở dòng đầu, thường giảm 30–60% token.</p>
+  </section>
+  <section id="panel-view" class="panel" hidden>
+    <p class="muted small">Từ gạch chân tốn từ 2 token trở lên, càng đậm càng tốn. Rê chuột để xem số token.</p>
+    <div id="heat" class="heat"></div>
+  </section>
+
+  <div id="io" class="io">
+    <section>
+      <div class="row between"><label for="src" class="h">Văn bản gốc</label><div class="row"><button id="btnSample">Dùng ví dụ</button><button id="btnClear">Xóa</button></div></div>
+      <textarea id="src" spellcheck="false" placeholder="Dán prompt, JSON hoặc code vào đây…"></textarea>
+    </section>
+    <section id="outWrap">
+      <div class="row between"><label for="out" class="h">Kết quả</label><button id="btnCopy" class="primary">Sao chép</button></div>
+      <textarea id="out" readonly></textarea>
+    </section>
+  </div>
+
+  <section id="panel-guide" class="panel guide" hidden>
+    <h2>Token là gì</h2>
+    <p>Mô hình AI không đọc chữ mà đọc các mẩu nhỏ gọi là token. Một token có thể là một từ ngắn, một phần của từ dài, một dấu câu hoặc một ký tự xuống dòng. Bạn bị tính tiền và bị giới hạn ngữ cảnh theo số token này, cả phần bạn gửi lên (đầu vào) lẫn phần AI trả về (đầu ra).</p>
+    <h2>Cách ước lượng nhanh</h2>
+    <ul>
+      <li>Tiếng Anh: khoảng 4 ký tự hoặc 0,75 từ cho mỗi token.</li>
+      <li>Tiếng Việt: chữ có dấu thường bị tách nhỏ hơn, khoảng 2 đến 2,5 ký tự cho mỗi token, nên cùng nội dung tốn nhiều token hơn tiếng Anh.</li>
+      <li>Code, JSON, số và ký hiệu: tốn nhiều hơn văn xuôi vì mỗi dấu thường là một token riêng.</li>
+      <li>Đây chỉ là ước lượng. Muốn con số chính xác, dùng bộ đếm token chính thức của nhà cung cấp mô hình bạn đang dùng.</li>
+    </ul>
+    <h2>Cách tính chi phí</h2>
+    <p>Chi phí = (token đầu vào × giá đầu vào + token đầu ra × giá đầu ra) ÷ 1.000.000. Giá đầu ra thường cao hơn giá đầu vào, và giá thay đổi theo mô hình, nên hãy nhập giá hiện hành vào ô phía trên.</p>
+    <p>Trong hội thoại nhiều lượt, toàn bộ lịch sử được gửi lại ở mỗi lượt. Lượt thứ 10 tốn nhiều hơn lượt thứ nhất rất nhiều, nên tổng chi phí tăng nhanh hơn bạn nghĩ.</p>
+    <h2>Cách giảm token xuống mức thấp nhất</h2>
+    <ul>
+      <li>Dịch prompt sang tiếng Anh: cùng nội dung, tiếng Anh thường tốn ít token hơn tiếng Việt rất nhiều. Dùng tab “Dịch Việt → Anh”.</li>
+      <li>Viết yêu cầu ngắn, một ý một câu. Bỏ lời chào, lời cảm ơn, câu lặp.</li>
+      <li>Chỉ gửi đoạn liên quan. Đừng dán cả tài liệu khi chỉ cần một mục.</li>
+      <li>Dữ liệu dạng bảng thì gửi dạng bảng, đừng gửi JSON lặp khóa.</li>
+      <li>Giới hạn đầu ra: nói rõ “trả lời tối đa 3 câu” hoặc “chỉ trả JSON”, và đặt tham số max_tokens.</li>
+      <li>Với hội thoại dài, định kỳ tóm tắt lịch sử rồi bỏ các lượt cũ.</li>
+      <li>Phần chỉ dẫn cố định và dài nên dùng tính năng lưu đệm prompt (prompt caching) nếu nhà cung cấp hỗ trợ.</li>
+      <li>Việc đơn giản như phân loại, trích xuất nên dùng mô hình nhỏ rẻ hơn.</li>
+      <li>Ví dụ mẫu (few-shot) chỉ giữ 1 đến 2 cái đủ rõ, đừng nhồi nhiều.</li>
+      <li>Bỏ dấu tiếng Việt có thể giảm khá nhiều token, nhưng đôi khi làm sai nghĩa. Hãy thử và kiểm tra kết quả.</li>
+    </ul>
+  </section>
+</main>
+<script src="js/store.js"></script>
+<script src="js/tokenizer.js"></script>
+<script src="js/rules.js"></script>
+<script src="js/pipeline.js"></script>
+<script src="js/tools.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
